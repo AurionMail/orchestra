@@ -51,6 +51,11 @@ func main() {
 		log.Fatalf("[main] Failed to write hydra.yml: %v", err)
 	}
 
+	hydraBin := mngr.GetRuntimePath("hydra")
+	if err := config.EnsureHydraMigrated(hydraBin, hydraYamlPath, cfg.DataDir); err != nil {
+		log.Fatalf("[main] Failed to run Hydra migrations: %v", err)
+	}
+
 	cryptpadDir := filepath.Join(mngr.GetRuntimePath("apps"), "cryptpad")
 
 	if err := config.EnsureCryptpadExtracted(cryptpadDir); err != nil {
