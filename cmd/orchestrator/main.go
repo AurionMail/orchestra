@@ -52,6 +52,11 @@ func main() {
 	}
 
 	cryptpadDir := filepath.Join(mngr.GetRuntimePath("apps"), "cryptpad")
+
+	if err := config.EnsureCryptpadExtracted(cryptpadDir); err != nil {
+		log.Fatalf("[main] Failed to extract CryptPad zip: %v", err)
+	}
+
 	if err := cfg.SetupCryptpadConfigs(cryptpadDir); err != nil {
 		log.Fatalf("[main] Failed to setup CryptPad configs: %v", err)
 	}

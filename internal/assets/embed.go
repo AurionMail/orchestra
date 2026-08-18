@@ -10,6 +10,9 @@ import (
 //go:embed bridges/*.html
 var BridgeTemplatesFS embed.FS
 
+//go:embed assets/apps/cryptpad.zip
+var CryptpadZip embed.FS
+
 // RuntimeFS embeds extracted executables and application bundles.
 //
 // Expected embedded directory structure at build time:

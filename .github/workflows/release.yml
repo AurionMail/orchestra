@@ -102,12 +102,7 @@ jobs:
         run: |
           DOCS_TAG=$(gh release view --repo AurionMail/docs --json tagName -q .tagName)
           echo "Downloading CryptPad from AurionMail/docs tag $DOCS_TAG..."
-          curl -L "https://github.com/AurionMail/docs/releases/download/${DOCS_TAG}/cryptpad.zip" -o cryptpad.zip
-          unzip -q cryptpad.zip -d temp_pad
-          cp -r temp_pad/cryptpad/. internal/assets/assets/apps/cryptpad/
-          rm -rf cryptpad.zip temp_pad
-          # resolve conflic wehn importing in GO because there is another file which name funding.json in the same directory
-          rm -f internal/assets/assets/apps/cryptpad/FUNDING.json
+          curl -L "https://github.com/AurionMail/docs/releases/download/${DOCS_TAG}/cryptpad.zip" -o internal/assets/assets/apps/cryptpad.zip
 
       - name: Download Webmail Standalone (from bulwarkmail/webmail release)
         env:
