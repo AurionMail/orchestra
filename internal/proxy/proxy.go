@@ -3,6 +3,7 @@ package proxy
 import (
 	"embed"
 	"fmt"
+	"net"
 	"net/http"
 	"net/http/httputil"
 	"net/url"
@@ -31,12 +32,13 @@ func NewProxy(cfg Config, embedFS embed.FS) (*ServiceProxy, error) {
 
 	// 1. Map internal service target addresses
 	targets := map[string]string{
-		"api":   "http://127.0.0.1:8070",
-		"oauth": "http://127.0.0.1:4444",
-		"pad":   "http://127.0.0.1:3010",
-		"sand":  "http://127.0.0.1:3010",
-		"sso":   "http://127.0.0.1:3030",
-		"web":   "http://127.0.0.1:3000",
+		"api":      "http://127.0.0.1:8070",
+		"oauth":    "http://127.0.0.1:4444",
+		"pad":      "http://127.0.0.1:3010",
+		"sand":     "http://127.0.0.1:3010",
+		"sso":      "http://127.0.0.1:3030",
+		"web":      "http://127.0.0.1:3000",
+		"crypt_ws": "http://127.0.0.1:3013",
 	}
 
 	// 2. Instantiate Reverse Proxies with native WebSocket support
@@ -51,6 +53,9 @@ func NewProxy(cfg Config, embedFS embed.FS) (*ServiceProxy, error) {
 			Rewrite: func(r *httputil.ProxyRequest) {
 				r.SetURL(targetURL)
 				r.Out.Header.Set("X-Forwarded-Host", r.In.Host)
+				if clientIP, _, err := net.SplitHostPort(r.In.RemoteAddr); err == nil {
+					r.Out.Header.Set("X-Real-IP", clientIP)
+				}
 			},
 		}
 
@@ -150,14 +155,7 @@ func (sp *ServiceProxy) handleCryptpadRoutes(w http.ResponseWriter, r *http.Requ
 
 	// 3. Route WebSocket connections dedicated to CryptPad (port 3013)
 	if strings.HasPrefix(r.URL.Path, "/cryptpad_websocket") {
-		wsURL, _ := url.Parse("http://127.0.0.1:3013")
-		wsProxy := &httputil.ReverseProxy{
-			Rewrite: func(req *httputil.ProxyRequest) {
-				req.SetURL(wsURL)
-				req.Out.Header.Set("X-Forwarded-Host", req.In.Host)
-			},
-		}
-		wsProxy.ServeHTTP(w, r)
+		sp.routes["crypt_ws"].ServeHTTP(w, r)
 		return
 	}
 
