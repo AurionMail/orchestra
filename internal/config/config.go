@@ -231,7 +231,7 @@ module.exports = {
 		return fmt.Errorf("failed to read admin config.js: %w", err)
 	}
 
-	runtimeConfigPath := filepath.Join(cryptpadRuntimeDir, "config.js")
+	runtimeConfigPath := filepath.Join(cryptpadRuntimeDir, "config", "config.js")
 	if err := os.WriteFile(runtimeConfigPath, configContent, 0644); err != nil {
 		return fmt.Errorf("failed to sync config.js to runtime: %w", err)
 	}
@@ -259,7 +259,7 @@ module.exports = {
 };
 `, c.Domain, clientID, clientSecret)
 
-	if err := os.WriteFile(filepath.Join(cryptpadRuntimeDir, "sso.js"), []byte(ssoJS), 0644); err != nil {
+	if err := os.WriteFile(filepath.Join(cryptpadRuntimeDir, "config", "sso.js"), []byte(ssoJS), 0644); err != nil {
 		return fmt.Errorf("failed to write sso.js: %w", err)
 	}
 

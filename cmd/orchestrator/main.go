@@ -95,7 +95,7 @@ func main() {
 		{
 			Name:       "sso",
 			Executable: nodeBin,
-			Args:       []string{filepath.Join(appsDir, "sso", "server.js")},
+			Args:       []string{filepath.Join(appsDir, "sso", "lib", "app.js")},
 			WorkDir:    filepath.Join(appsDir, "sso"),
 			Env:        cfg.GetSSOEnv(),
 		},
