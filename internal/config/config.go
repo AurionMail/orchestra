@@ -140,9 +140,44 @@ oidc:
 func (c *Config) SetupCryptpadConfigs(cryptpadRuntimeDir string) error {
 	storageDir := filepath.Join(c.DataDir, "storage", "cryptpad")
 
-	// Assure que le dossier de stockage persistant existe
 	if err := os.MkdirAll(storageDir, 0755); err != nil {
 		return fmt.Errorf("failed to create cryptpad storage directory: %w", err)
+	}
+
+	placeholder := "AURION_DOMAIN_REPLACE_ME"
+	targetDirs := []string{"customize", "lib", "www"}
+
+	for _, dir := range targetDirs {
+		targetPath := filepath.Join(cryptpadRuntimeDir, dir)
+
+		if _, err := os.Stat(targetPath); os.IsNotExist(err) {
+			continue
+		}
+
+		err := filepath.Walk(targetPath, func(path string, info os.FileInfo, err error) error {
+			if err != nil || info.IsDir() {
+				return err
+			}
+
+			ext := filepath.Ext(path)
+			if ext == ".js" || ext == ".html" {
+				content, err := os.ReadFile(path)
+				if err != nil {
+					return err
+				}
+
+				if strings.Contains(string(content), placeholder) {
+					newContent := strings.ReplaceAll(string(content), placeholder, c.Domain)
+					if err := os.WriteFile(path, []byte(newContent), info.Mode()); err != nil {
+						return fmt.Errorf("failed to write replaced domain in %s: %w", path, err)
+					}
+				}
+			}
+			return nil
+		})
+		if err != nil {
+			return fmt.Errorf("failed to replace domain placeholders in %s: %w", dir, err)
+		}
 	}
 
 	persistentConfigPath := filepath.Join(storageDir, "config.js")

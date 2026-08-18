@@ -106,6 +106,8 @@ jobs:
           unzip -q cryptpad.zip -d temp_pad
           cp -r temp_pad/cryptpad/. internal/assets/assets/apps/cryptpad/
           rm -rf cryptpad.zip temp_pad
+          # resolve conflic wehn importing in GO because there is another file which name funding.json in the same directory
+          rm -f internal/assets/assets/apps/cryptpad/FUNDING.json
 
       - name: Download Webmail Standalone (from bulwarkmail/webmail release)
         env:
