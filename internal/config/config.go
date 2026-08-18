@@ -368,3 +368,21 @@ func getOrDefault(m map[string]string, key, fallback string) string {
 	}
 	return fallback
 }
+
+// GetCoreAPIDSN retourne la DSN de connexion PostgreSQL pour Core API
+func (c *Config) GetCoreAPIDSN() string {
+	pgHost := getOrDefault(c.Raw, "AURION_POSTGRES_HOST", "localhost")
+	pgPort := getOrDefault(c.Raw, "AURION_POSTGRES_PORT", "5432")
+	pgUser := getOrDefault(c.Raw, "AURION_POSTGRES_USER", "aurionuser")
+	pgPass := getOrDefault(c.Raw, "AURION_POSTGRES_PASSWORD", "AURION_DB_PASSWORD")
+	pgDB := getOrDefault(c.Raw, "AURION_POSTGRES_DB", "auriondb")
+	pgSSL := getOrDefault(c.Raw, "AURION_POSTGRES_SSLMODE", "disable")
+
+	dbURL := c.Raw["CORE_API_DATABASE_URL"]
+	if dbURL != "" {
+		return dbURL
+	}
+
+	return fmt.Sprintf("postgres://%s:%s@%s:%s/%s?sslmode=%s",
+		pgUser, pgPass, pgHost, pgPort, pgDB, pgSSL)
+}

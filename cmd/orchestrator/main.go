@@ -56,6 +56,10 @@ func main() {
 		log.Fatalf("[main] Failed to run Hydra migrations: %v", err)
 	}
 
+	if err := config.EnsureCoreAPIMigrated(cfg.DataDir, mngr.GetRuntimePath(""), cfg.GetCoreAPIDSN()); err != nil {
+		log.Fatalf("[main] Failed to run Core-API migrations: %v", err)
+	}
+
 	cryptpadDir := filepath.Join(mngr.GetRuntimePath("apps"), "cryptpad")
 
 	if err := config.EnsureCryptpadExtracted(cryptpadDir); err != nil {

@@ -71,6 +71,12 @@ jobs:
           unzip -q api.zip -d temp_api
           mv temp_api/aurion-api internal/assets/assets/core-api
           chmod +x internal/assets/assets/core-api
+          
+          mkdir -p internal/assets/assets/migrations
+          if [ -f temp_api/migrations/init.sql ]; then
+            cp temp_api/migrations/init.sql internal/assets/assets/migrations/init.sql
+          fi
+          
           rm -rf api.zip temp_api
 
       # ------------------------------------------------------------------------
