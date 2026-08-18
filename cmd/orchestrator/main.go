@@ -45,6 +45,17 @@ func main() {
 		log.Fatalf("[main] Failed to extract runtime assets: %v", err)
 	}
 
+	// 3b. Generate Hydra YAML config
+	hydraYamlPath := filepath.Join(mngr.GetRuntimePath(""), "hydra.yml")
+	if err := cfg.WriteHydraConfigFile(hydraYamlPath); err != nil {
+		log.Fatalf("[main] Failed to write hydra.yml: %v", err)
+	}
+
+	cryptpadDir := filepath.Join(mngr.GetRuntimePath("apps"), "cryptpad")
+	if err := cfg.SetupCryptpadConfigs(cryptpadDir); err != nil {
+		log.Fatalf("[main] Failed to setup CryptPad configs: %v", err)
+	}
+
 	// 4. Initialize Internal Reverse Proxy
 	revProxy, err := proxy.NewProxy(proxy.Config{
 		Domain: cfg.Domain,
@@ -65,9 +76,9 @@ func main() {
 		{
 			Name:       "hydra",
 			Executable: mngr.GetRuntimePath("hydra"),
-			Args:       []string{"serve", "all", "--dangerous-force-http"},
+			Args:       []string{"serve", "all", "-c", hydraYamlPath, "--dangerous-force-http"},
 			WorkDir:    mngr.GetRuntimePath(""),
-			Env:        cfg.GetHydraEnv(),
+			Env:        map[string]string{},
 		},
 		{
 			Name:       "core-api",
@@ -87,8 +98,8 @@ func main() {
 			Name:       "cryptpad",
 			Executable: nodeBin,
 			Args:       []string{filepath.Join(appsDir, "cryptpad", "server.js")},
-			WorkDir:    filepath.Join(appsDir, "cryptpad"),
-			Env:        cfg.GetCryptpadEnv(),
+			WorkDir:    cryptpadDir,
+			Env:        map[string]string{},
 		},
 		{
 			Name:       "webmail",
