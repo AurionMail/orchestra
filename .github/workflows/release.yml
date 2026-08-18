@@ -1,0 +1,136 @@
+name: Build and Attach Orchestrator Release Asset
+
+on:
+  release:
+    types: [published]
+
+permissions:
+  contents: write
+
+jobs:
+  build-and-upload:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.23'
+
+      # ------------------------------------------------------------------------
+      # 1. CREATE INTERNAL ASSETS STRUCTURE
+      # ------------------------------------------------------------------------
+      - name: Create internal assets structure
+        run: |
+          mkdir -p internal/assets/bridges
+          mkdir -p internal/assets/assets/apps/{sso,cryptpad,webmail}
+
+      # ------------------------------------------------------------------------
+      # 2. DOWNLOAD PORTABLE NODE.JS BINARY (ENCAPSULATED RUNTIME)
+      # ------------------------------------------------------------------------
+      - name: Download Portable Node.js Binary
+        run: |
+          NODE_VERSION="v22.12.0"
+          echo "Downloading Node.js $NODE_VERSION binary..."
+          curl -L "https://nodejs.org/dist/${NODE_VERSION}/node-${NODE_VERSION}-linux-x64.tar.xz" -o node.tar.xz
+          tar -xJf node.tar.xz --strip-components=2 "node-${NODE_VERSION}-linux-x64/bin/node"
+          mv node internal/assets/assets/node
+          chmod +x internal/assets/assets/node
+          rm node.tar.xz
+
+      # ------------------------------------------------------------------------
+      # 3. DOWNLOAD THIRD-PARTY & GO BINARIES
+      # ------------------------------------------------------------------------
+      - name: Download Ory Hydra
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          HYDRA_TAG=$(gh release view --repo ory/hydra --json tagName -q .tagName)
+          HYDRA_VERSION="${HYDRA_TAG#v}"
+          echo "Downloading Hydra $HYDRA_TAG..."
+          curl -L "https://github.com/ory/hydra/releases/download/${HYDRA_TAG}/hydra_${HYDRA_VERSION}-linux_64bit.tar.gz" -o hydra.tar.gz
+          tar -xzf hydra.tar.gz hydra
+          mv hydra internal/assets/assets/hydra
+          chmod +x internal/assets/assets/hydra
+          rm hydra.tar.gz
+
+      - name: Download Core API
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          API_TAG=$(gh release view --repo AurionMail/core-api --json tagName -q .tagName)
+          echo "Downloading Core API $API_TAG..."
+          curl -L "https://github.com/AurionMail/core-api/releases/download/${API_TAG}/aurion-api.zip" -o api.zip
+          unzip -q api.zip -d temp_api
+          mv temp_api/aurion-api internal/assets/assets/core-api
+          chmod +x internal/assets/assets/core-api
+          rm -rf api.zip temp_api
+
+      # ------------------------------------------------------------------------
+      # 4. DOWNLOAD WEB APPS & BRIDGES
+      # ------------------------------------------------------------------------
+      - name: Download Bridges HTML Templates
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          BRIDGES_TAG=$(gh release view --repo AurionMail/bridges --json tagName -q .tagName)
+          echo "Downloading Bridges $BRIDGES_TAG..."
+          curl -L "https://github.com/AurionMail/bridges/archive/refs/tags/${BRIDGES_TAG}.zip" -o bridges.zip
+          unzip -q -j bridges.zip -d internal/assets/bridges
+          rm bridges.zip
+
+      - name: Download SSO Bundle
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          SSO_TAG=$(gh release view --repo AurionMail/sso --json tagName -q .tagName)
+          echo "Downloading SSO $SSO_TAG..."
+          curl -L "https://github.com/AurionMail/sso/releases/download/${SSO_TAG}/aurion-sso.zip" -o sso.zip
+          unzip -q sso.zip -d internal/assets/assets/apps/sso
+          rm sso.zip
+
+      - name: Download CryptPad Bundle (from AurionMail/docs release)
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          DOCS_TAG=$(gh release view --repo AurionMail/docs --json tagName -q .tagName)
+          echo "Downloading CryptPad from AurionMail/docs tag $DOCS_TAG..."
+          curl -L "https://github.com/AurionMail/docs/releases/download/${DOCS_TAG}/cryptpad.zip" -o cryptpad.zip
+          unzip -q cryptpad.zip -d temp_pad
+          cp -r temp_pad/cryptpad/. internal/assets/assets/apps/cryptpad/
+          rm -rf cryptpad.zip temp_pad
+
+      - name: Download Webmail Standalone (from bulwarkmail/webmail release)
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          WEBMAIL_TAG=$(gh release view --repo bulwarkmail/webmail --json tagName -q .tagName)
+          WEBMAIL_VERSION="${WEBMAIL_TAG#v}"
+          echo "Downloading Bulwark Webmail $WEBMAIL_TAG..."
+          curl -L "https://github.com/bulwarkmail/webmail/releases/download/${WEBMAIL_TAG}/bulwark-standalone-${WEBMAIL_VERSION}-linux-amd64.tar.gz" -o webmail.tar.gz
+          tar -xzf webmail.tar.gz -C internal/assets/assets/apps/webmail --strip-components=1
+          rm webmail.tar.gz
+
+      # ------------------------------------------------------------------------
+      # 5. COMPILE ORCHESTRATOR EXECUTABLE AND UPLOAD TO RELEASE
+      # ------------------------------------------------------------------------
+      - name: Build Orchestrator Executable
+        run: |
+          go build -ldflags="-s -w" -o aurion-orchestrator ./cmd/orchestrator
+
+      - name: Compress Executable
+        run: |
+          zip aurion-orchestrator-linux-amd64.zip aurion-orchestrator
+
+      - name: Upload Binary to Release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release upload ${{ github.event.release.tag_name }} aurion-orchestrator-linux-amd64.zip --clobber
