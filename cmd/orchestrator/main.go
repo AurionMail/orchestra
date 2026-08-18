@@ -81,7 +81,7 @@ func main() {
 		{
 			Name:       "hydra",
 			Executable: mngr.GetRuntimePath("hydra"),
-			Args:       []string{"serve", "all", "-c", hydraYamlPath, "--dangerous-force-http"},
+			Args:       []string{"serve", "all", "-c", hydraYamlPath},
 			WorkDir:    mngr.GetRuntimePath(""),
 			Env:        map[string]string{},
 		},

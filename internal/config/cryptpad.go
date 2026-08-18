@@ -7,6 +7,7 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"aurion-orchestrator/internal/assets"
 )
@@ -21,23 +22,26 @@ func EnsureCryptpadExtracted(destDir string) error {
 		return fmt.Errorf("failed to create cryptpad dir: %w", err)
 	}
 
-	// 1. Lire le zip embarqué dans l'exécutable Go
 	zipData, err := assets.CryptpadZip.ReadFile("assets/apps/cryptpad.zip")
 	if err != nil {
 		return fmt.Errorf("failed to read embedded cryptpad.zip: %w", err)
 	}
 
-	// 2. Décompression
 	zipReader, err := zip.NewReader(bytes.NewReader(zipData), int64(len(zipData)))
 	if err != nil {
 		return fmt.Errorf("failed to open cryptpad.zip: %w", err)
 	}
 
 	for _, file := range zipReader.File {
-		filePath := filepath.Join(destDir, file.Name)
+		cleanName := filepath.Clean(file.Name)
 
-		// Sécurité contre la vulnérabilité Zip Slip
-		if !filepath.HasPrefix(filePath, filepath.Clean(destDir)+string(os.PathSeparator)) {
+		parts := strings.Split(cleanName, string(os.PathSeparator))
+		if len(parts) > 1 && parts[0] == "cryptpad" {
+			cleanName = filepath.Join(parts[1:]...)
+		}
+
+		filePath := filepath.Join(destDir, cleanName)
+		if !filepath.HasPrefix(filePath, filepath.Clean(destDir)+string(os.PathSeparator)) && filePath != destDir {
 			return fmt.Errorf("illegal file path in zip: %s", file.Name)
 		}
 
