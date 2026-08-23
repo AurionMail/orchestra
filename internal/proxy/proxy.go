@@ -86,8 +86,7 @@ func (sp *ServiceProxy) loadBridges(embedFS embed.FS) error {
 		}
 
 		// Dynamically replace domain placeholders inside bridge templates
-		hydrated := strings.ReplaceAll(string(content), "DOMAIN_REPLACE_ME", sp.domain)
-		hydrated = strings.ReplaceAll(hydrated, "DOMAIN", sp.domain)
+		hydrated := strings.ReplaceAll(string(content), "DOMAIN_TO_REPLACE", sp.domain)
 		sp.bridgeTemplates[key] = hydrated
 	}
 
