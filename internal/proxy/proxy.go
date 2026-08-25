@@ -32,13 +32,14 @@ func NewProxy(cfg Config, embedFS embed.FS) (*ServiceProxy, error) {
 
 	// 1. Map internal service target addresses
 	targets := map[string]string{
-		"api":      "http://127.0.0.1:8070",
-		"oauth":    "http://127.0.0.1:4444",
-		"pad":      "http://127.0.0.1:3010",
-		"sand":     "http://127.0.0.1:3010",
-		"sso":      "http://127.0.0.1:3030",
-		"web":      "http://127.0.0.1:3000",
-		"crypt_ws": "http://127.0.0.1:3013",
+		"api":         "http://127.0.0.1:8070",
+		"openpgpkeys": "http://127.0.0.1:8070",
+		"oauth":       "http://127.0.0.1:4444",
+		"pad":         "http://127.0.0.1:3010",
+		"sand":        "http://127.0.0.1:3010",
+		"sso":         "http://127.0.0.1:3030",
+		"web":         "http://127.0.0.1:3000",
+		"crypt_ws":    "http://127.0.0.1:3013",
 	}
 
 	// 2. Instantiate Reverse Proxies with native WebSocket support
