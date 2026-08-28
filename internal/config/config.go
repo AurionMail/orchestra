@@ -296,6 +296,7 @@ func (c *Config) GetSSOEnv() map[string]string {
 		"CRYPTPAD_DOMAIN_WP":       fmt.Sprintf("https://pad.%s", c.Domain),
 		"CORE_API_URL":             fmt.Sprintf("https://api.%s", c.Domain),
 		"CORE_API_INTERNAL_SECRET": getOrDefault(c.Raw, "AURION_API_INTERNAL_SECRET", "default_internal_secret"),
+		"OPAQUE_SERVER_SETUP":      getOrDefault(c.Raw, "OPAQUE_SECRET", "QcHqVTRjuUfuM8Hlu6Zp6fd8WMDPYdDWekOh4flxWfHBpGTcyn1pS1TCEZNJ5wJ-mXYZjb539WJ9ShzGjyh2BMjhhl8WAOu_qkQ-o1_DX-_22g2Z7UEu1aGDs4-ZaG8LZgLGu41u3XOS9wF12EX0iJU1uzKGo1b-g50ZY4g7hQg"),
 	}
 }
 
