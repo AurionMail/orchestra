@@ -122,6 +122,9 @@ secrets:
   system:
     - %s
 
+ttl:
+  access_token: 5m
+
 oidc:
   subject_identifiers:
     supported_types:
