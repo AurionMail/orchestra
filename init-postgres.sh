@@ -1,0 +1,32 @@
+#!/bin/bash
+set -e
+
+psql -v ON_ERROR_STOP=1 \
+     --username "$POSTGRES_USER" \
+     --dbname "$POSTGRES_DB" \
+     -v hydra_pass="$HYDRA_POSTGRES_PASSWORD" <<-EOSQL
+
+    REVOKE ALL ON DATABASE auriondb FROM PUBLIC;
+    GRANT ALL PRIVILEGES ON DATABASE auriondb TO aurionuser;
+
+    \c auriondb
+    REVOKE ALL ON SCHEMA public FROM PUBLIC;
+    GRANT ALL ON SCHEMA public TO aurionuser;
+    ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON TABLES TO aurionuser;
+    ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON SEQUENCES TO aurionuser;
+
+    CREATE USER hydra WITH PASSWORD :'hydra_pass';
+    CREATE DATABASE hydra OWNER hydra;
+
+    REVOKE ALL ON DATABASE hydra FROM PUBLIC;
+    GRANT ALL PRIVILEGES ON DATABASE hydra TO hydra;
+
+    \c hydra
+    REVOKE ALL ON SCHEMA public FROM PUBLIC;
+    GRANT ALL ON SCHEMA public TO hydra;
+    ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON TABLES TO hydra;
+    ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON SEQUENCES TO hydra;
+
+    CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+    GRANT EXECUTE ON FUNCTION uuid_generate_v4() TO hydra;
+EOSQL

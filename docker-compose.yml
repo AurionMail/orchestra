@@ -1,0 +1,46 @@
+services:
+  postgres:
+    image: postgres:17-alpine
+    container_name: aurion-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${AURION_POSTGRES_USER:-aurionuser}
+      POSTGRES_PASSWORD: ${AURION_POSTGRES_PASSWORD}
+      POSTGRES_DB: ${AURION_POSTGRES_DB:-auriondb}
+      HYDRA_POSTGRES_PASSWORD: ${HYDRA_POSTGRES_PASSWORD}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./init-postgres.sh:/docker-entrypoint-initdb.d/01-init.sh:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${AURION_POSTGRES_USER:-aurionuser} -d ${AURION_POSTGRES_DB:-auriondb}"]
+      interval: 3s
+      timeout: 3s
+      retries: 5
+
+  aurion-stack:
+    image: ghcr.io/aurionmail/orchestra:latest
+    container_name: aurion-orchestrator
+    restart: unless-stopped
+    # Access to LLDAP + Stalwart
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    env_file:
+      - .env
+    environment:
+      - DATA_DIR=/var/lib/aurion
+      - ORCHESTRATOR_PORT=8090
+      - AURION_POSTGRES_HOST=postgres
+      - HYDRA_POSTGRES_HOST=postgres
+    ports:
+      - "127.0.0.1:8090:8090"
+    volumes:
+      - aurion_data:/var/lib/aurion
+
+volumes:
+  aurion_data:
+    driver: local
+  postgres_data:
+    driver: local
