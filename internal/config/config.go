@@ -362,6 +362,7 @@ func (c *Config) GetWebmailEnv() map[string]string {
 
 	return map[string]string{
 		"PORT":                "3000",
+		"HOSTNAME":            "0.0.0.0",
 		"NODE_ENV":            "production",
 		"SETTINGS_DATA_DIR":   filepath.Join(webmailDataDir, "settings"),
 		"ADMIN_CONFIG_DIR":    filepath.Join(webmailDataDir, "admin"),
