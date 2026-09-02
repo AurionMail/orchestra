@@ -38,6 +38,8 @@ services:
       - "127.0.0.1:8090:8090"
     volumes:
       - aurion_data:/var/lib/aurion
+      - ./.env:/.env:ro
+      - ./.env:/var/lib/aurion/.env:ro
 
 volumes:
   aurion_data:
