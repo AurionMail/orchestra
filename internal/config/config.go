@@ -13,6 +13,7 @@ type Config struct {
 	Domain  string
 	DataDir string
 	Port    string // Orchestrator proxy port (defaults to 8090)
+	Host    string // Orchestrator proxy host (defaults to 127.0.0.1)
 
 	// Raw key-value store loaded from .env
 	Raw map[string]string
@@ -57,11 +58,15 @@ func Load(envPath string) (*Config, error) {
 		Domain:  raw["DOMAIN"],
 		DataDir: raw["DATA_DIR"],
 		Port:    raw["ORCHESTRATOR_PORT"],
+		Host:    raw["ORCHESTRATOR_HOST"],
 		Raw:     raw,
 	}
 
 	if cfg.Port == "" {
 		cfg.Port = "8090"
+	}
+	if cfg.Host == "" {
+		cfg.Host = "127.0.0.1"
 	}
 	if cfg.DataDir == "" {
 		cfg.DataDir = "./data"

@@ -132,7 +132,7 @@ func main() {
 	}
 
 	// 7. Configure HTTP Reverse Proxy Server
-	serverAddr := fmt.Sprintf("127.0.0.1:%s", cfg.Port)
+	serverAddr := fmt.Sprintf("%s:%s", cfg.Host, cfg.Port)
 	server := &http.Server{
 		Addr:         serverAddr,
 		Handler:      revProxy,
