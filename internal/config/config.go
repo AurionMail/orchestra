@@ -10,10 +10,12 @@ import (
 
 // Config represents the parsed central environment configuration.
 type Config struct {
-	Domain  string
-	DataDir string
-	Port    string // Orchestrator proxy port (defaults to 8090)
-	Host    string // Orchestrator proxy host (defaults to 127.0.0.1)
+	Domain            string
+	DataDir           string
+	Port              string // Orchestrator proxy port (defaults to 8090)
+	Host              string // Orchestrator proxy host (defaults to 127.0.0.1)
+	SecretBulwarkSSO  string // Secret for BulwarkMail SSO integration
+	SecretCryptpadSSO string // Secret for CryptPad SSO integration
 
 	// Raw key-value store loaded from .env
 	Raw map[string]string
@@ -55,11 +57,14 @@ func Load(envPath string) (*Config, error) {
 	}
 
 	cfg := &Config{
-		Domain:  raw["DOMAIN"],
-		DataDir: raw["DATA_DIR"],
-		Port:    raw["ORCHESTRATOR_PORT"],
-		Host:    raw["ORCHESTRATOR_HOST"],
-		Raw:     raw,
+		Domain:            raw["DOMAIN"],
+		DataDir:           raw["DATA_DIR"],
+		Port:              raw["ORCHESTRATOR_PORT"],
+		Host:              raw["ORCHESTRATOR_HOST"],
+		SecretBulwarkSSO:  raw["WEBMAIL_OAUTH_CLIENT_SECRET"],
+		SecretCryptpadSSO: raw["CRYPTPAD_OAUTH_CLIENT_SECRET"],
+
+		Raw: raw,
 	}
 
 	if cfg.Port == "" {

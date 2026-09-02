@@ -86,14 +86,26 @@ func main() {
 	nodeBin := mngr.GetRuntimePath("node")
 	appsDir := mngr.GetRuntimePath("apps")
 
-	services := []runner.ServiceConfig{
-		{
-			Name:       "hydra",
-			Executable: mngr.GetRuntimePath("hydra"),
-			Args:       []string{"serve", "all", "-c", hydraYamlPath},
-			WorkDir:    mngr.GetRuntimePath(""),
-			Env:        map[string]string{},
-		},
+	hydraSvc := runner.ServiceConfig{
+		Name:       "hydra",
+		Executable: mngr.GetRuntimePath("hydra"),
+		Args:       []string{"serve", "all", "-c", hydraYamlPath},
+		WorkDir:    mngr.GetRuntimePath(""),
+		Env:        map[string]string{},
+	}
+
+	log.Println("[main] Starting Hydra service...")
+	if err := mngr.StartService(ctx, hydraSvc); err != nil {
+		log.Fatalf("[main] ERROR: Failed to start Hydra: %v", err)
+	}
+
+	go func() {
+		if err := config.ConfigureHydraClients(hydraBin, cfg); err != nil {
+			log.Printf("[main] ERROR: Hydra configuration failed: %v", err)
+		}
+	}()
+
+	otherServices := []runner.ServiceConfig{
 		{
 			Name:       "core-api",
 			Executable: mngr.GetRuntimePath("core-api"),
@@ -125,7 +137,7 @@ func main() {
 	}
 
 	log.Println("[main] Starting child services...")
-	for _, svc := range services {
+	for _, svc := range otherServices {
 		if err := mngr.StartService(ctx, svc); err != nil {
 			log.Printf("[main] ERROR: Failed to start service %s: %v", svc.Name, err)
 		}
