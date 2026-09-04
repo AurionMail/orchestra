@@ -17,10 +17,10 @@ import (
 
 // ServiceConfig defines parameters for executing a child process.
 type ServiceConfig struct {
-	Name       string            // e.g., "cryptpad", "hydra", "sso"
-	Executable string            // Path to executable (e.g., node path or binary)
-	Args       []string          // Command line arguments
-	WorkDir    string            // Working directory
+	Name       string
+	Executable string
+	Args       []string
+	WorkDir    string
 	Env        map[string]string // Custom environment variables for this service
 }
 

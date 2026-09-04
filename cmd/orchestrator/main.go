@@ -153,7 +153,7 @@ func main() {
 		IdleTimeout:  120 * time.Second,
 	}
 
-	// 8. Listen for OS Shutdown Signals (SIGINT, SIGTERM)
+	// 8. Listen for OS Shutdown Signals
 	shutdownSig := make(chan os.Signal, 1)
 	signal.Notify(shutdownSig, syscall.SIGINT, syscall.SIGTERM)
 

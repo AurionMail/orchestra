@@ -98,7 +98,7 @@ func (c *Config) Validate() error {
 // HYDRA CONFIG GENERATOR
 // -----------------------------------------------------------------------------
 
-// WriteHydraConfigFile génère le fichier hydra.yml dans le dossier runtime.
+// generate hydra.yml in runtime directory.
 func (c *Config) WriteHydraConfigFile(targetPath string) error {
 	hydraUser := getOrDefault(c.Raw, "HYDRA_POSTGRES_USER", getOrDefault(c.Raw, "POSTGRES_USER", "hydra"))
 	hydraPass := getOrDefault(c.Raw, "HYDRA_POSTGRES_PASSWORD", getOrDefault(c.Raw, "POSTGRES_PASSWORD", "hydra"))
@@ -315,7 +315,6 @@ func (c *Config) GetSSOEnv() map[string]string {
 
 // GetCoreAPIEnv builds environment variables for the Go Core API service.
 func (c *Config) GetCoreAPIEnv() map[string]string {
-	// Traitement du BASE_DN pour transformer "domaine.tld" en "dc=domaine,dc=tld"
 	domainParts := strings.Split(c.Domain, ".")
 	dcParts := make([]string, len(domainParts))
 	for i, part := range domainParts {
@@ -323,7 +322,6 @@ func (c *Config) GetCoreAPIEnv() map[string]string {
 	}
 	baseDN := fmt.Sprintf("ou=people,%s", strings.Join(dcParts, ","))
 
-	// Configuration Postgres
 	pgHost := getOrDefault(c.Raw, "AURION_POSTGRES_HOST", "localhost")
 	pgPort := getOrDefault(c.Raw, "AURION_POSTGRES_PORT", "5432")
 	pgUser := getOrDefault(c.Raw, "AURION_POSTGRES_USER", "aurionuser")
@@ -387,7 +385,6 @@ func getOrDefault(m map[string]string, key, fallback string) string {
 	return fallback
 }
 
-// GetCoreAPIDSN retourne la DSN de connexion PostgreSQL pour Core API
 func (c *Config) GetCoreAPIDSN() string {
 	pgHost := getOrDefault(c.Raw, "AURION_POSTGRES_HOST", "localhost")
 	pgPort := getOrDefault(c.Raw, "AURION_POSTGRES_PORT", "5432")
