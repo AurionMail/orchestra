@@ -12,10 +12,30 @@ import (
 	"aurion-orchestrator/internal/assets"
 )
 
-func EnsureCryptpadExtracted(destDir string) error {
+func EnsureCryptpadExtracted(destDir string, dataDir string) error {
+	targetDataDir := filepath.Join(dataDir, "data")
+	if err := os.MkdirAll(targetDataDir, 0755); err != nil {
+		return fmt.Errorf("failed to create persistent data dir: %w", err)
+	}
+
+	ensureSymlink := func() error {
+		linkPath := filepath.Join(destDir, "data")
+
+		if target, err := os.Readlink(linkPath); err == nil && target == targetDataDir {
+			return nil
+		}
+		_ = os.RemoveAll(linkPath)
+
+		// Create the symlink: runtime/apps/cryptpad/data -> storage/cryptpad/data
+		if err := os.Symlink(targetDataDir, linkPath); err != nil {
+			return fmt.Errorf("failed to create cryptpad data symlink: %w", err)
+		}
+		return nil
+	}
+
 	markerFile := filepath.Join(destDir, "server.js")
 	if _, err := os.Stat(markerFile); err == nil {
-		return nil
+		return ensureSymlink()
 	}
 
 	if err := os.MkdirAll(destDir, 0755); err != nil {
@@ -73,6 +93,10 @@ func EnsureCryptpadExtracted(destDir string) error {
 		if err != nil {
 			return err
 		}
+	}
+
+	if err := ensureSymlink(); err != nil {
+		return err
 	}
 
 	return nil
