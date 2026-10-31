@@ -158,7 +158,7 @@ func (c *Config) SetupCryptpadConfigs(cryptpadRuntimeDir string) error {
 	}
 
 	placeholder := "AURION_DOMAIN_REPLACE_ME"
-	targetDirs := []string{"customize", "lib", "www"}
+	targetDirs := []string{"customize", "lib", "www", "node_modules/cryptpad-server"}
 
 	for _, dir := range targetDirs {
 		targetPath := filepath.Join(cryptpadRuntimeDir, dir)
@@ -194,19 +194,15 @@ func (c *Config) SetupCryptpadConfigs(cryptpadRuntimeDir string) error {
 	}
 
 	persistentConfigPath := filepath.Join(storageDir, "config.js")
+	persistentInfraPath := filepath.Join(storageDir, "infra.js")
 
 	if _, err := os.Stat(persistentConfigPath); os.IsNotExist(err) {
 		defaultConfigJS := fmt.Sprintf(`/* 
  * CryptPad Admin Configuration File
  * Location: %s
- * You can manually edit this file. It will be preserved across restarts.
+ * You can manually edit this file. It will be preserved across Aurion restarts.
  */
 module.exports = {
-    httpUnsafeOrigin: 'https://pad.%s',
-    httpSafeOrigin: 'https://sand.%s',
-    httpAddress: '127.0.0.1',
-    httpPort: 3010,
-	httpSafePort: 3011,
 	websocketPort: 3013,
     filePath: '%s',
     archivePath: '%s',
@@ -225,7 +221,6 @@ module.exports = {
 };
 `,
 			persistentConfigPath,
-			c.Domain, c.Domain,
 			filepath.Join(storageDir, "datastore"),
 			filepath.Join(storageDir, "archive"),
 			filepath.Join(storageDir, "pins"),
@@ -242,14 +237,86 @@ module.exports = {
 		}
 	}
 
+	if _, err := os.Stat(persistentInfraPath); os.IsNotExist(err) {
+		defaultInfraJS := fmt.Sprintf(`
+	/* 
+	* CryptPad Infrastructure Configuration File
+	* Location: %s
+	* You can manually edit this file. It will be preserved across Aurion restarts.
+	*/
+
+module.exports = {
+    "public": {
+        origin: 'https://pad.%s',
+        sandboxOrigin: 'https://sand.%s',
+        httpHost: '127.0.0.1',
+        httpPort: 3010,
+        httpSafePort: 3011,
+        externalWebsocketURL: undefined,
+        fileHost: undefined,
+        httpServerId: "",
+    },
+    "front": [
+        {
+            host: "localhost",
+            port: 3000,
+        },
+        {
+            host: "localhost",
+            port: 3001,
+        }
+    ],
+    "core": [
+        {
+            host: "localhost",
+            port: 3020,
+        },
+        {
+            host: "localhost",
+            port: 3021,
+        }
+    ],
+    "storage": [
+        {
+            host: "localhost",
+            port: 3050,
+            wsPort: 3050,
+        },
+        {
+            host: "localhost",
+            port: 3031,
+            wsPort: 3041,
+        }
+    ]
+};
+`,
+			persistentInfraPath,
+			c.Domain,
+			c.Domain,
+		)
+
+		if err := os.WriteFile(persistentInfraPath, []byte(defaultInfraJS), 0644); err != nil {
+			return fmt.Errorf("failed to write initial infra config.js: %w", err)
+		}
+	}
+
 	configContent, err := os.ReadFile(persistentConfigPath)
 	if err != nil {
 		return fmt.Errorf("failed to read admin config.js: %w", err)
+	}
+	infraContent, err := os.ReadFile(persistentInfraPath)
+	if err != nil {
+		return fmt.Errorf("failed to read infra infra.js: %w", err)
 	}
 
 	runtimeConfigPath := filepath.Join(cryptpadRuntimeDir, "config", "config.js")
 	if err := os.WriteFile(runtimeConfigPath, configContent, 0644); err != nil {
 		return fmt.Errorf("failed to sync config.js to runtime: %w", err)
+	}
+
+	runtimeInfraPath := filepath.Join(cryptpadRuntimeDir, "config", "infra.js")
+	if err := os.WriteFile(runtimeInfraPath, infraContent, 0644); err != nil {
+		return fmt.Errorf("failed to sync infra.js to runtime: %w", err)
 	}
 
 	clientID := getOrDefault(c.Raw, "CRYPTPAD_OAUTH_CLIENT_ID", "cryptpad")
