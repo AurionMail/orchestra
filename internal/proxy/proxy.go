@@ -39,7 +39,6 @@ func NewProxy(cfg Config, embedFS embed.FS) (*ServiceProxy, error) {
 		"sand":       "http://127.0.0.1:3010",
 		"sso":        "http://127.0.0.1:3030",
 		"web":        "http://127.0.0.1:3000",
-		"crypt_ws":   "http://127.0.0.1:3013",
 	}
 
 	// 2. Instantiate Reverse Proxies with native WebSocket support
@@ -152,13 +151,7 @@ func (sp *ServiceProxy) handleCryptpadRoutes(w http.ResponseWriter, r *http.Requ
 		return
 	}
 
-	// 3. Route WebSocket connections dedicated to CryptPad (port 3013)
-	if strings.HasPrefix(r.URL.Path, "/cryptpad_websocket") {
-		sp.routes["crypt_ws"].ServeHTTP(w, r)
-		return
-	}
-
-	// 4. Standard CryptPad traffic (port 3010)
+	// 3. Standard CryptPad traffic (port 3010)
 	sp.routes["pad"].ServeHTTP(w, r)
 }
 
