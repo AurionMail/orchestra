@@ -280,7 +280,7 @@ module.exports = {
         {
             host: "localhost",
             port: 3050,
-            wsPort: 3050,
+            wsPort: 3051,
         },
         {
             host: "localhost",
