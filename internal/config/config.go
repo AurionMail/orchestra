@@ -133,7 +133,7 @@ secrets:
     - %s
 
 ttl:
-  access_token: 5m
+  access_token: 60m
 
 oidc:
   subject_identifiers:
