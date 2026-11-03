@@ -110,12 +110,13 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          WEBMAIL_TAG=$(gh release view --repo AurionMail/bulwarkmail --json tagName -q .tagName)
+          WEBMAIL_TAG=$(gh release view --repo bulwarkmail/webmail --json tagName -q .tagName)
           WEBMAIL_VERSION="${WEBMAIL_TAG#v}"
           echo "Downloading Bulwark Webmail $WEBMAIL_TAG..."
-          curl -L "https://github.com/AurionMail/bulwarkmail/releases/download/${WEBMAIL_TAG}/bulwark-standalone-${WEBMAIL_VERSION}-linux-amd64.tar.gz" -o webmail.tar.gz
-          tar -xzf webmail.tar.gz -C internal/assets/assets/apps/webmail --strip-components=1
-          rm webmail.tar.gz
+          
+          mkdir -p temp_webmail internal/assets/assets/apps/webmail
+          
+          curl -L "https://github.com/bulwarkmail/webmail/releases/download/${WEBMAIL_TAG}/bulwark-standalone-${WEBMAIL_VERSION}-linux-amd64.tar.gz" -o internal/assets/assets/apps/webmail.tar.gz
 
       # ------------------------------------------------------------------------
       # 5. COMPILE ORCHESTRATOR EXECUTABLE AND UPLOAD TO RELEASE
@@ -138,7 +139,7 @@ jobs:
         run: |
           gh release upload ${{ github.event.release.tag_name }} aurion-orchestrator-linux-amd64.zip --clobber
 
-      # ------------------------------------------------------------------------
+# ------------------------------------------------------------------------
       # 6. BUILD & PUSH DOCKER IMAGE TO GHCR
       # ------------------------------------------------------------------------
       - name: Set up Docker Buildx

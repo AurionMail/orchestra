@@ -45,6 +45,12 @@ func main() {
 		log.Fatalf("[main] Failed to extract runtime assets: %v", err)
 	}
 
+	webmailDir := filepath.Join(mngr.GetRuntimePath("apps"), "webmail")
+
+	if err := config.EnsureWebmailExtracted(webmailDir); err != nil {
+		log.Fatalf("[main] Failed to extract webmail tar: %v", err)
+	}
+
 	// 3b. Generate Hydra YAML config
 	hydraYamlPath := filepath.Join(mngr.GetRuntimePath(""), "hydra.yml")
 	if err := cfg.WriteHydraConfigFile(hydraYamlPath); err != nil {
