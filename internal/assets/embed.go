@@ -13,6 +13,9 @@ var BridgeTemplatesFS embed.FS
 //go:embed assets/apps/cryptpad.zip
 var CryptpadZip embed.FS
 
+//go:embed assets/apps/webmail.tar.gz
+var WebmailTar embed.FS
+
 // RuntimeFS embeds extracted executables and application bundles.
 //
 // Expected embedded directory structure at build time:
